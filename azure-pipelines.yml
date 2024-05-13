@@ -1,0 +1,74 @@
+# Simple Build and Deployment YAML Configuration for WPF application
+# LearnWithJon = This is just the sample project/app name, feel free to change it.
+
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  majorVersion: 0
+  minorVersion: 1
+  patchVersion: $[counter(variables['minorVersion'], 0)]
+
+jobs:
+  - job: BuildAndPackage
+    displayName: 'Build and Package'
+    pool:
+      vmImage: 'windows-latest'
+    
+    steps:
+      - task: UseDotNet@2
+        displayName: 'Use .NET Core SDK'
+        inputs:
+          version: '8.0.x'  # Replace x with the latest patch version of .NET 8.0 or change it to diffrent .NET version
+      
+      - checkout: self
+      
+      - task: PowerShell@2
+        displayName: 'Generate Semantic Version'
+        inputs:
+          targetType: 'inline'
+          script: |
+            $majorVersion = "$(majorVersion)"
+            $minorVersion = "$(minorVersion)"
+            $patchVersion = "$(patchVersion)"
+
+            $semanticVersion = "$majorVersion.$minorVersion.$patchVersion"
+            Write-Host "##vso[task.setvariable variable=semanticVersion]$semanticVersion"
+      
+      - task: DotNetCoreCLI@2
+        displayName: 'Restore NuGet Packages'
+        inputs:
+          command: 'restore'
+          projects: '**/*.csproj'
+      
+      - task: DotNetCoreCLI@2
+        displayName: 'Build WPF Project'
+        inputs:
+          command: 'build'
+          projects: '**/*.csproj'
+          arguments: '--configuration Release'
+      
+      - task: DotNetCoreCLI@2
+        displayName: 'Publish WPF Project'
+        inputs:
+          command: 'publish'
+          publishWebProjects: false
+          arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/LearnWithJon'
+          zipAfterPublish: false
+      
+      - task: ArchiveFiles@2
+        displayName: 'Create Zip File'
+        inputs:
+          rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/LearnWithJon'
+          includeRootFolder: false
+          archiveType: 'zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/LearnWithJon-$(semanticVersion)-beta.zip'
+      
+      - task: PublishPipelineArtifact@0
+        displayName: 'Publish Artifacts'
+        inputs:
+          targetPath: '$(Build.ArtifactStagingDirectory)/LearnWithJon-$(semanticVersion)-beta.zip'
+          artifact: 'wpf-app'
+          publishLocation: 'pipeline'
