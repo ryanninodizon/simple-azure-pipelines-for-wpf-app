@@ -4,4 +4,4 @@
 
 ## Expected build result
 
-![](https://github.com/ryanninodizon/simple-azure-pipelines-for-wpf-app/blob/main/build-result-screenshot.JPG)
+
