@@ -21,7 +21,7 @@ jobs:
       - task: UseDotNet@2
         displayName: 'Use .NET Core SDK'
         inputs:
-          version: '8.0.x'  # Replace x with the latest patch version of .NET 8.0 or change it to diffrent .NET version
+          version: '8.0.x'  # Replace x with the latest patch version of .NET 8.0 or change it to diffrent.NET version
       
       - checkout: self
       
